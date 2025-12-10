@@ -115,15 +115,13 @@ credit_valid <- testing(split2)
 
 # Exploratory Plot 1
 
-Exploratory Plot 1 examines the relationship between credit duration and credit amount using only the training set, as required. The plot overlays a scatterplot and boxplot, with colour and fill mapped to the "Savings \< 100 DM" category, and facets used to highlight differences between savings groups. A label marks the applicant with the highest loan amount.
-
-The visualization shows that applicants with very low savings tend to request higher loan amounts and often have longer credit durations. These relationships are directly relevant for modelling because duration and amount are key continuous predictors, while savings level is a categorical feature that may influence both.
+Exploratory Plot 1 uses the **training set** to examine how credit duration relates to credit amount, with colour and faceting based on the **low-savings indicator (savings_category_A61)** [@ucStatlog]**.** A smoothing curve highlights the trend for each group, and a label marks the highest loan amount. The plot shows that applicants with very low savings tend to request higher credit amounts and often over longer durations. These relationships are important for modelling because duration and amount are key continuous predictors, while savings level may help explain variation in borrowing behaviour.
 
 ```{r}
 credit_train <- credit
 
 ggplot(credit_train, aes(x = credit_duration, y = credit_amount)) +
-  geom_boxplot(aes(fill = savings_category_A61), alpha = 0.3, outlier.shape = NA) +
+  geom_smooth(aes(colour = savings_category_A61), method = "loess", se = FALSE) +
   geom_point(aes(colour = savings_category_A61), alpha = 0.5) +
   geom_label_repel(
     data = credit_train |> slice_max(credit_amount, n = 1),
@@ -133,24 +131,23 @@ ggplot(credit_train, aes(x = credit_duration, y = credit_amount)) +
   facet_wrap(~ savings_category_A61) +
   labs(
     title = "Exploring Duration vs Amount in the German Credit Dataset",
-    subtitle = "Colour = Very Low Savings (A61); Facets show savings category",
+    subtitle = "Colour = Very Low Savings; Facets show savings category",
     x = "Duration (months)",
     y = "Credit Amount (DM)",
-    caption = "Training data only. Demonstrates relationships between savings, duration, and loan amount."
+    caption = "Training data only.Relationship between savings, duration, and loan amount."
   ) +
   theme_minimal()
 ```
 
 # Exploratory Plot 2
 
-DESC HERE
+Exploratory Plot 2 compares applicant age across employment categories using **only the training data**. The violin and boxplot combination shows that applicants employed for 1--4 years tend to be slightly younger and have a more concentrated age range, while the other group spans early, mid, and late career stages, thus a wider and older distribution. This relationship is relevant **for modelling** because both age and employment stability influence credit behaviour and inform which features should be included in later
 
 ```{r}
-
 ggplot(credit_train, aes(x = employment_length_A73, y = years_old)) +
   # Violin plot to show distribution
   geom_violin(aes(fill = employment_length_A73), alpha = 0.5) +
-  # Boxplot layered on top
+  # Boxplot layered on top to summarize age distribution
   geom_boxplot(width = 0.2, alpha = 0.8, outlier.shape = NA) +
   labs(
     title = "Age Distribution by Employment Category",
@@ -161,4 +158,14 @@ ggplot(credit_train, aes(x = employment_length_A73, y = years_old)) +
     caption = "Exploratory Plot 2: visualizing feature relationships relevant for modelling"
   ) +
   theme_minimal()
+```
+
+# Exploratory Linear Model 1
+
+Full Model DESC
+
+```{r}
+model_full <- lm(credit_amount ~ credit_duration * savings_category_A61,
+                 data = credit_train)
+summary(model_full)
 ```

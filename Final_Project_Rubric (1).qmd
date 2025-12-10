@@ -175,16 +175,16 @@ You must complete **either** Option 1 (Advanced Data Cleaning) or Option 2 (Adva
 
 ## Checklist 2 (Plotting)
 
--   [ ] `geom_point()`
--   [ ] `geom_histogram()` and/or `geom_density()` and/or `geom_boxplot()`,
--   [ ] `geom_violin`, and/or `geom_density_ridges`
+-   [x] `geom_point()`
+-   [x] `geom_histogram()` and/or `geom_density()` and/or `geom_boxplot()`,
+-   [x] `geom_violin`, and/or `geom_density_ridges`
 -   [ ] `geom_bar()` and/or `geom_col()`
--   [ ] `geom_label()` or `geom_label_repel()`
--   [ ] `aes(colour = column_name)`
--   [ ] `aes(fill = column_name)`
--   [ ] `facet_wrap()` and/or `facet_grid()`
--   [ ] Meaningful subtitle
--   [ ] Figure captions (either using Rmd or in the "caption" argument to `labs()` in `ggplot2`)
+-   [x] `geom_label()` or `geom_label_repel()`
+-   [x] `aes(colour = column_name)`
+-   [x] `aes(fill = column_name)`
+-   [x] `facet_wrap()` and/or `facet_grid()`
+-   [x] Meaningful subtitle
+-   [x] Figure captions (either using Rmd or in the "caption" argument to `labs()` in `ggplot2`)
 
 ## Checklist 3 (Modelling)
 
