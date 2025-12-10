@@ -93,6 +93,9 @@ for (column in non_numeric_columns) {
 
 credit <- credit %>% 
   mutate(across(where(is.double), as.factor))
+
+credit_clean <- credit
+credit <- credit <- tibble(read.table("german.data"))
 ```
 
 ```{r}
@@ -100,7 +103,7 @@ credit <- credit %>%
 
 set.seed(123)  # ensures reproducible splits
 
-split1 <- initial_split(credit, prop = 0.85)
+split1 <- initial_split(credit_clean, prop = 0.85)
 
 credit_train_valid <- training(split1)
 credit_test <- testing(split1)
@@ -118,7 +121,7 @@ credit_valid <- testing(split2)
 Exploratory Plot 1 uses the **training set** to examine how credit duration relates to credit amount, with colour and faceting based on the **low-savings indicator (savings_category_A61)** [@ucStatlog]**.** A smoothing curve highlights the trend for each group, and a label marks the highest loan amount. The plot shows that applicants with very low savings tend to request higher credit amounts and often over longer durations. These relationships are important for modelling because duration and amount are key continuous predictors, while savings level may help explain variation in borrowing behaviour.
 
 ```{r}
-credit_train <- credit
+credit_train <- credit_clean
 #Use ifelse() to check dummy variable (savings_category_A61) and make new columns that can be plotted and easier to label on graph so Proffesor Sunny Wang can easily read our plot!
 credit_train$savings_label <- ifelse(
   credit_train$savings_category_A61 == 1,
@@ -205,4 +208,71 @@ model_no_interaction <- lm(credit_amount ~ credit_duration + savings_category_A6
 predict_no_inter <- predict(model_no_interaction, newdata = credit_valid)
 rmse_no_inter <- sqrt(mean((credit_valid$credit_amount - predict_no_inter)^2))
 rmse_no_inter
+```
+
+# Model 2 and Advanced Data Cleaning
+
+Given that the independent variables are mostly categorical, 54 categorical variables vs 8 numeric variables, a multiple linear regression model over the binary 0 and 1 encoding of the categorical variables may not be the best idea. Consider the credit_purpose variable, in the unclean data there are 11 possible values for the variable from A40 to A410, this creates 10 new variables in the cleaned dataset. And across the whole dataset which originally had 21 variables we now have 62 variables. From the lecture content, we know that there is a trade off between bias and variance, more variables may give more predictive power through overfitting (not good), but also introduces an increase in variability. A good model should find a balanced middle ground.
+
+To reduce the amount of variables we will follow chapter 17.3: of the text "Tidy Modeling with R" which introduces likelihood encoding [@tidyModel]. Instead of encoding categorical variables with a 1 or 0, we will encode the variables with the mean of the response variable credit_amount for each category. For example, the credit_purpose variable:
+
+```{r}
+credit %>%    
+  ggplot(aes(x = V4, y = V5)) +   
+  geom_boxplot() +    
+  labs(
+    title = "Distribution of Credit Amount vs Credit Purpose",
+    y = "Credit Amount",
+    x = "Credit Purpose") +
+  theme_minimal()
+```
+
+This gives us much more insight about the data compared to just 1s and 0s. We can see that for credit purpose A44 (Domestic Appliances) tends to correspond to lower credit amount vs A49 (Business).
+
+```{r}
+credit_reduced_variables <- credit %>% 
+  rename("account_status" = V1, 
+         "credit_duration" = V2,
+         "credit_history" = V3, 
+         "credit_purpose" = V4,
+         "credit_amount" = V5,         
+         "savings_category" = V6,     
+         "employment_length" = V7,    
+         "credit_rate" = V8,        
+         "mariage_sex_status" = V9,     
+         "external_creditors" = V10,   
+         "residence_years" = V11,      
+         "valuable_property" = V12,   
+         "years_old" = V13,       
+         "other_credit_plans" = V14,   
+         "housing_type" = V15,        
+         "credit_lines" = V16,        
+         "job_type" = V17,         
+         "dependants" = V18,       
+         "landline" = V19,       
+         "foreign_worker" = V20,    
+         "credit_risk" = V21)  
+
+credit_reduced_variables <- credit_reduced_variables %>%   
+  mutate(across(all_of(non_numeric_columns),           
+                ~ave(credit_amount, ., FUN = mean)))
+```
+
+Intuitively, we know that good credit in the past may be a good predictor for your credit in the future. Other intuitive credit predictors may also be, job type where higher paying and more reputation may lead a lender to lend more, credit rate where cheaper credit may encourage more borrowing, and credit type because you may need to borrow more for a house instead of a car.
+
+```{r}
+credit_reduced_variables %>% ggplot(aes(x = job_type, y = credit_amount, color = credit_rate)) +   
+  geom_point() +   
+  labs(title = "Credit Amount by Job Type",
+       subtitle = "Differing job types lead to differing credit amounts",
+       y = "Credit Amount", 
+       x = "Job Type",
+       color = "Credit Rate") + 
+  theme_minimal()
+```
+
+```{r}
+model_reduced_variables <- lm(credit_amount ~ job_type + credit_duration + credit_rate + credit_purpose,                                credit_reduced_variables)  
+
+summary(model_reduced_variables)
 ```
