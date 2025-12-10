@@ -119,6 +119,12 @@ Exploratory Plot 1 uses the **training set** to examine how credit duration rela
 
 ```{r}
 credit_train <- credit
+#Use ifelse() to check dummy variable (savings_category_A61) and make new columns that can be plotted and easier to label on graph so Proffesor Sunny Wang can easily read our plot!
+credit_train$savings_label <- ifelse(
+  credit_train$savings_category_A61 == 1,
+  "Low Savings (<100 DM)",
+  "Savings ≥ 100 DM"
+)
 
 ggplot(credit_train, aes(x = credit_duration, y = credit_amount)) +
   geom_smooth(aes(colour = savings_category_A61), method = "loess", se = FALSE) +
@@ -128,10 +134,9 @@ ggplot(credit_train, aes(x = credit_duration, y = credit_amount)) +
     aes(label = paste("Max Amount =", credit_amount)),
     size = 3
   ) +
-  facet_wrap(~ savings_category_A61) +
+  facet_wrap(~ savings_label) +
   labs(
     title = "Exploring Duration vs Amount in the German Credit Dataset",
-    subtitle = "Colour = Very Low Savings; Facets show savings category",
     x = "Duration (months)",
     y = "Credit Amount (DM)",
     caption = "Training data only.Relationship between savings, duration, and loan amount."
@@ -162,10 +167,42 @@ ggplot(credit_train, aes(x = employment_length_A73, y = years_old)) +
 
 # Exploratory Linear Model 1
 
-Full Model DESC
+The full model includes credit duration, the low-savings indicator, and their interaction to test whether the effect of duration on credit amount differs by savings level. Duration is strongly significant, while the savings and interaction terms are weaker, but together they still provide the best predictive performance based on validation RMSE.
 
 ```{r}
 model_full <- lm(credit_amount ~ credit_duration * savings_category_A61,
                  data = credit_train)
 summary(model_full)
+#Note: Plot 1 already hinted at the relationship between duration and amount change depending on savings level!
+```
+
+The model is used to generate predicted credit amounts for the **validation set**, and the RMSE is calculated by comparing these predictions to the actual values. This RMSE score measures how well the full model predicts unseen data, providing an objective way to assess its performance.
+
+```{r}
+predict_full <- predict(model_full, newdata = credit_valid)
+
+rmse_full <- sqrt(mean((credit_valid$credit_amount - predict_full)^2))
+rmse_full
+```
+
+This model removes the **categorical savings variable** and uses only credit duration to predict credit amount. The RMSE calculated on the validation set shows how much predictive accuracy is lost when the categorical feature is removed.
+
+```{r}
+model_no_cat <- lm(credit_amount ~ credit_duration,
+                   data = credit_train)
+
+predict_no_cat <- predict(model_no_cat, newdata = credit_valid)
+rmse_no_cat <- sqrt(mean((credit_valid$credit_amount - predict_no_cat)^2))
+rmse_no_cat
+```
+
+This version removes the interaction term but keeps both predictors. By calculating the validation RMSE, we can see how much predictive performance changes when the interaction between duration and savings level is excluded, helping assess whether the interaction meaningfully improves the model.
+
+```{r}
+model_no_interaction <- lm(credit_amount ~ credit_duration + savings_category_A61,
+                           data = credit_train)
+
+predict_no_inter <- predict(model_no_interaction, newdata = credit_valid)
+rmse_no_inter <- sqrt(mean((credit_valid$credit_amount - predict_no_inter)^2))
+rmse_no_inter
 ```
