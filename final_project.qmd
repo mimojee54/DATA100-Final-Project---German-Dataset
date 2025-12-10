@@ -1,0 +1,257 @@
+---
+title: "DATA 100 Final Project: Analysis of German Credit Data"
+author: "Carter Fillingham (169064112), Karim Nasereddin (169119978)"
+date: "December 10, 2025"
+format: pdf
+editor: visual
+bibliography: references.bib
+---
+
+```{r,message=FALSE, warning=FALSE, results='hide'}
+library(tidyverse)
+library(patchwork)
+library(tidymodels)
+library(rsample)
+library(dplyr)
+```
+
+# Introduction To The German Credit Dataset
+
+The German Credit Data was downloaded from the University of California Irvine's Machine Learning Repository [@ucStatlog]. Where the dataset originates from Prof. Hans Hofmann of the University of Hamburg, [@statlogBook] who provided the data to a European research project (STATLOG) that aimed to evaluate "the performance of machine learning, neural and statistical algorithms" on different datasets in order to provide guidance on which models to use in the future . [@statlogEU]
+
+# Goals
+
+For this project, our goal is to model the response variable credit amount given an individuals credit history, age, existing credit lines, etc...
+
+```{r}
+# Import data and place it in a tibble
+credit <- tibble(read.table("german.data"))
+```
+
+# Data Cleaning Procedure
+
+The German Credit Data contains both numerical and categorical data. The names of the variables are a "V" followed by a single or double digit number. The categorical data is encoded such that the values for each variable is a character consisting of a "A" followed by either a two digit or three digit number.
+
+For example,
+
+```{r}
+credit %>% select(V10) %>%
+  unique()
+```
+
+Where "V10" is the variable name of the category of whether there is or is not a guarantor for the credit. "A101" translates to no guarantor, "A102" to a co-applicant, and "A103" to a guarantor.
+
+Following the tidy data principles, we want each column to be a variable, each row to be an observation, and each entry to be a single value. For the guarantor example, we will create three variables, called none, co-applicant, and guarantor where the value is 1 if there is a none, co-applicant, or guarantor respectively. And are a 0 if there is no none, co-applicant, or guarantor for each observation. Then we will proceed similarity for each variable.
+
+```{r}
+credit_clean <- credit %>% 
+  mutate(V1 = case_when(
+    str_detect(V1, "A11") ~ "Checking Negative",
+    str_detect(V1, "A12") ~ "Checking LT 200",
+    str_detect(V1, "A13") ~ "Checking GT 200",
+    str_detect(V1, "A14") ~ "No Checking"
+  )) %>%
+  pivot_wider(names_from = V1, 
+              values_from = V1, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V3 = case_when(
+    str_detect(V3, "A30") ~ "No Credits",
+    str_detect(V3, "A31") ~ "All Credits Paid for This Bank",
+    str_detect(V3, "A32") ~ "All Credits Paid",
+    str_detect(V3, "A33") ~ "Past Credit Delay",
+    str_detect(V3, "A34") ~ "Critical Credits"
+  )) %>%
+  pivot_wider(names_from = V3, 
+              values_from = V3, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V4 = case_when(
+    str_detect(V4, "A40") ~ "New Car",
+    str_detect(V4, "A41") ~ "Used Car",
+    str_detect(V4, "A42") ~ "Furniture/equipment",
+    str_detect(V4, "A43") ~ "Radio/television",
+    str_detect(V4, "A44") ~ "Domestic Appliances",
+    str_detect(V4, "A45") ~ "Repairs",
+    str_detect(V4, "A46") ~ "Education",
+    str_detect(V4, "A47") ~ "Vacation",
+    str_detect(V4, "A48") ~ "Retraining",
+    str_detect(V4, "A49") ~ "Business",
+    str_detect(V4, "A410") ~ "Other"
+  )) %>% 
+  pivot_wider(names_from = V4, 
+              values_from = V4, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V6 = case_when(
+    str_detect(V6, "A61") ~ "Savings LT 100",
+    str_detect(V6, "A62") ~ "Savings In 100-500",
+    str_detect(V6, "A63") ~ "Savings In 500-1000",
+    str_detect(V6, "A64") ~ "Savings GT 1000",
+    str_detect(V6, "A65") ~ "Savings Unknown"
+  )) %>%
+  pivot_wider(names_from = V6, 
+              values_from = V6, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V7 = case_when(
+    str_detect(V7, "A71") ~ "Unemployed",
+    str_detect(V7, "A72") ~ "Employed LT 1Y",
+    str_detect(V7, "A73") ~ "Employed 1-4Y",
+    str_detect(V7, "A74") ~ "Employed 4-7Y",
+    str_detect(V7, "A75") ~ "Employed GT 7Y"
+  )) %>%
+  pivot_wider(names_from = V7, 
+              values_from = V7, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V9 = case_when(
+    str_detect(V9, "A91") ~ "Male Divorced",
+    str_detect(V9, "A92") ~ "Female Divorced",
+    str_detect(V9, "A93") ~ "Male Single",
+    str_detect(V9, "A94") ~ "Male Married",
+    str_detect(V9, "A95") ~ "Female Single"
+  )) %>% 
+  pivot_wider(names_from = V9, 
+              values_from = V9, 
+              values_fn = ~1, 
+              values_fill = 0) %>%
+  mutate(V10 = case_when(
+    str_detect(V10, "A101") ~ "No Guarantor",
+    str_detect(V10, "A102") ~ "Co-applicant",
+    str_detect(V10, "A103") ~ "Guarantor"
+  )) %>% 
+  pivot_wider(names_from = V10, 
+              values_from = V10, 
+              values_fn = ~1,
+              values_fill = 0) %>% 
+  mutate(V12 = case_when(
+    str_detect(V12, "A121") ~ "Real Estate",
+    str_detect(V12, "A122") ~ "Life Insurance",
+    str_detect(V12, "A123") ~ "Car",
+    str_detect(V12, "A124") ~ "Unknown"
+  )) %>% 
+  pivot_wider(names_from = V12, 
+              values_from = V12, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V14 = case_when(
+    str_detect(V14, "A141") ~ "Bank",
+    str_detect(V14, "A142") ~ "Stores",
+    str_detect(V14, "A143") ~ "No Plan"
+  )) %>% 
+  pivot_wider(names_from = V14, 
+              values_from = V14, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V15 = case_when(
+    str_detect(V15, "A151") ~ "Renter",
+    str_detect(V15, "A152") ~ "Owner",
+    str_detect(V15, "A153") ~ "Free"
+  )) %>%
+  pivot_wider(names_from = V15, 
+              values_from = V15, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V17 = case_when(
+    str_detect(V17, "A171") ~ "Unskilled Non-Resident",
+    str_detect(V17, "A172") ~ "Unskilled Resident",
+    str_detect(V17, "A173") ~ "Skilled",
+    str_detect(V17, "A174") ~ "Management"
+  )) %>%
+  pivot_wider(names_from = V17, 
+              values_from = V17, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V19 = case_when(
+    str_detect(V19, "A191") ~ "No Phone",
+    str_detect(V19, "A192") ~ "Yes Phone"
+  )) %>%
+  pivot_wider(names_from = V19, 
+              values_from = V19, 
+              values_fn = ~1, 
+              values_fill = 0) %>% 
+  mutate(V20 = case_when(
+    str_detect(V20, "A201") ~ "Foreigner Yes",
+    str_detect(V20, "A202") ~ "Foreigner No"
+  )) %>%
+  pivot_wider(names_from = V20, 
+              values_from = V20, 
+              values_fn = ~1, 
+              values_fill = 0) |>
+  # Attributes renamed from official variable list from UCI
+  rename(
+    Duration = V2,
+    Amount   = V5,
+    Age = V13
+  )
+
+#Split the data into Training Set, Validation Set, and Test Set ( ONLY TO BE USED AT THE END ) as per Rubric Mentions Training-Validation-Test Sets in Plotting
+
+set.seed(123)  # ensures reproducible splits
+
+split1 <- initial_split(credit_clean, prop = 0.85)
+
+credit_train_valid <- training(split1)
+credit_test <- testing(split1)
+
+set.seed(123)
+
+split2 <- initial_split(credit_train_valid, prop = 0.80)
+
+credit_train <- training(split2)
+credit_valid <- testing(split2)
+```
+
+# Exploratory Plot 1
+
+Exploratory Plot 1 examines the relationship between credit duration and credit amount using only the training set, as required. The plot overlays a scatterplot and boxplot, with colour and fill mapped to the "Savings \< 100 DM" category, and facets used to highlight differences between savings groups. A label marks the applicant with the highest loan amount.
+
+The visualization shows that applicants with very low savings tend to request higher loan amounts and often have longer credit durations. These relationships are directly relevant for modelling because duration and amount are key continuous predictors, while savings level is a categorical feature that may influence both.
+
+```{r}
+credit_train <- credit_clean
+
+ggplot(credit_train, aes(x = Duration, y = Amount)) +
+  geom_boxplot(aes(fill = `Savings LT 100`), alpha = 0.3, outlier.shape = NA) +
+  geom_point(aes(colour = `Savings LT 100`), alpha = 0.5) +
+  geom_label_repel(
+    data = credit_train |> slice_max(Amount, n = 1),
+    aes(label = paste("Max Amount =", Amount)),
+    size = 3
+  ) +
+  facet_wrap(~ `Savings LT 100`) +
+  labs(
+    title = "Exploring Duration vs Amount in the German Credit Dataset",
+    subtitle = "Colour = Very Low Savings (A61); Facets show savings category",
+    x = "Duration (months)",
+    y = "Credit Amount (DM)",
+    caption = "Training data only. Demonstrates relationships between savings, duration, and loan amount."
+  ) +
+  theme_minimal()
+```
+
+# Exploratory Plot 2
+
+DESC HERE
+
+```{r}
+
+credit_train$Employment_1_4Y <- as.factor(credit_train$`Employed 1-4Y`)
+# Create a factor for GGPLOT ensuring the values are treated as discrete categories rather than continuous numbers
+
+ggplot(credit_train, aes(x = Employment_1_4Y, y = Age)) +
+  # Violin plot to show distribution
+  geom_violin(aes(fill = Employment_1_4Y), alpha = 0.5) +
+  # Boxplot layered on top
+  geom_boxplot(width = 0.2, alpha = 0.8, outlier.shape = NA) +
+  labs(
+    title = "Age Distribution by Employment Category",
+    subtitle = "Comparing applicants employed 1–4 years vs others using the training data only",
+    x = "Employment Duration (1 = Employed 1–4 Years)",
+    y = "Age (years)",
+    fill = "1–4 Years Employed",
+    caption = "Exploratory Plot 2: visualizing feature relationships relevant for modelling"
+  ) +
+  theme_minimal()
+```

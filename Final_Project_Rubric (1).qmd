@@ -1,0 +1,195 @@
+---
+title: "DATA100 Final Project: Checklist and Rubric"
+subtitle: "Due date: Dec. 10, 2025"
+execute: 
+  eval: false
+format: pdf
+sansfont: Georgia
+mainfont: Georgia
+---
+
+\vspace{-1.5cm}
+
+There is a **strict** 10 page limit. This includes code, tables, text **and** plots! Your submission *must* be a pdf, and it must show all of the code (never use `echo=FALSE` in your Rmd). Failure to show the code will result in a zero in *all* relevant rubric items.
+
+I strongly recommend the `patchwork` library to put plots side-by-side and thus take up less room: <https://patchwork.data-imaginist.com/articles/patchwork.html>. You can also control the size of plots using code chunk options as shown in the example code below.
+
+```{r fig.height=6, fig.width=12}
+#| echo: fenced
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(patchwork)
+    theme_set(theme_bw())
+    library(tidymodels)
+})
+my_df <- read_csv("path_to_data_fram")
+
+# Plotting code
+gg1 <- ggplot()
+gg2 <- ggplot()
+
+gg1 + gg2 # These plots will be side-by-side; requires the patchwork library.
+my_df # DON'T DO THIS!!! THIS WILL PRINT THE DATA IN THE OUTPUT!!!
+```
+
+Note that this assignment does not explicitly require the use of the `tidymodels` package, but you will lose a lot of marks for not properly dealing with the train/validation/test splits.
+
+## Rubric
+
+As before, you can get level 1 or 3 in each of these but I only describe levels 2 and 4.
+
+You must complete **either** Option 1 (Advanced Data Cleaning) or Option 2 (Advanced Modelling). There are no bonus marks for doing both, but you will lose marks if you do neither.
+
+-   **Choice of Data**
+    -   **Target Variable**
+        -   Level 2: The target variable is continuous
+        -   Level 3: It is clear which variable in the data should be the target variable.
+    -   **Categorical features**
+        -   Level 2: There are one or two categorical features
+        -   Level 3: There are at least two categorical features that will clearly be relevant to the response.
+    -   **Continuous features**
+        -   Level 2: There are one or two continuous features
+        -   Level 3: There are at least three continuous features that will clearly be relevant to the response.
+-   **Organization and Structure**
+    -   **Miscellaneous**
+        -   Level 0: Any of the cleaned data sets are shown directly in the PDF. You can include subsets of the data to demonstrate something specific about the structure, but do not use `head()`, `glimpse()`, or simply display the data at any point in the PDF.
+        -   Level 2: The PDF includes the text and the plots, possibly with some unnecessary code output or odd plot placement.
+        -   Level 4: The reader makes it through the whole document without noticing the formatting because it's so natural and error-free.
+    -   **Structure**
+        -   Level 2: Follows the structure laid out in the description.
+        -   Level 4: Follows the structure, with sub-headings as necessary.
+    -   **Formatting**
+        -   Level 0: Rmd not properly knitted (it is completely fine if you knit to HTML or DOCX, then print to PDF).
+        -   Level 2: No obvious formatting issues.
+        -   Level 4: Formatting makes the project easy to read.
+    -   **Tomfoolery**
+        -   Level 0: The students made the text smaller and messed with the margins in order to fit within the 10 page limit.
+        -   Level 4: The output is the default PDF output from an Rmd (or is knitted to HTML or DOCX and then printed to PDF).
+-   **Introduction**
+    -   Level 2: Introduction provides context for the data.
+    -   Level 4: Introduction makes the reader interested in the study being presented, without directly referencing the study.
+-   **Goals/Research Question**
+    -   **Clarity**
+        -   Level 2: The goal of the study can be determined.
+        -   Level 4: The goal is written concisely
+    -   **Completeness**
+        -   Level 2: The researcher's goal can be achieved.
+        -   Level 4: It is clear exactly what criteria are necessary to conclude that the goal is achieved.
+-   **Basic Data Cleaning**
+    -   **Checklist 1**
+        -   Level 2: At least 50% of the items in Checklist 1 are used in a way that is relevant to the exploration/modelling
+        -   Level 4: At least 90% of the items in Checklist 1 are used in a way that is relevant to the exploration/modelling
+    -   **Description**
+        -   Level 0: You simply describe each line of code
+        -   Level 2: The description of the cleaning is correct, but makes some references to the actual functions used.
+        -   Level 4: The description of the cleaning is concise, with absolutely no references to the exact function or column names. The reader could implement your cleaning process in another programming language based on your description.
+-   **Advanced Data Cleaning** (Option 1 or 2)
+    -   If you consider your cleaning to be advanced, explicitly mention it!
+    -   **Relevance**
+        -   Level 2: The results of the advanced cleaning are used in the exploration and/or modelling.
+        -   Level 4: The results of the advanced cleaning are *necessary* for the exploration *and* modelling.
+    -   **Advanced-ness**
+        -   Level 2: The cleaning is above what is in the checklist below.
+        -   Level 4: The cleaning requires tidyverse functions beyond what we've done in class, or requires very careful consideration of the features in the data.
+-   **Exploratory Plot 1/Table 1** (only using 2 or more features, not the target variable)
+    -   **Checklist 2**
+        -   Level 2: At least 50% of the items in Checklist 2 are used in a way that is relevant to the exploration/modelling
+        -   Level 4: At least 90% of the items in Checklist 2 are used in a way that is relevant to the exploration/modelling
+    -   **Training-Validation-Test** (You will lose marks for this *each time* you violate it)
+        -   Level 0: The plots include data from either the validation or test sets.
+        -   Level 4: The validation and test sets are not used.
+    -   **Content**
+        -   Level 2: The plot/table shows the relationship between features
+        -   Level 4: The relationships are relevant to what will be used in the model.
+    -   **Results**
+        -   Level 2: The relationships found are discussed.
+        -   Level 4: The relevance to the modelling processes is discussed clearly and concisely.
+-   **Exploratory Plot 2/Table 2**: See Exploratory Plot 1/Table 1.
+-   **Model Plot 1** (the relationship between the target and several features)
+    -   **Training-Validation-Test** (You will lose marks for this *each time* you violate it)
+        -   Level 0: The plots include data from either the validation or test sets.
+        -   Level 4: The validation and test sets are not used.
+    -   **Content**
+        -   Level 2: The plot/table shows the relationship between target and features
+        -   Level 4: The relationships are relevant to what will be used in the model.
+    -   **Results**
+        -   Level 2: The relationships found are discussed.
+        -   Level 4: The relevance to the modelling processes is discussed clearly and concisely.
+-   **Model Plot 2** (see Model Plot 1)
+-   **Exploratory Linear Model 1**
+    -   **Checklist 3**
+        -   Level 2: At least 60% of the items in Checklist 3 are used in a reasonable way
+        -   Level 4: At least 90% of the items in Checklist 3 are used in a reasonable way
+    -   **Choice of Features**
+        -   Level 2: A rationale for the choice of features is provided.
+        -   Level 4: The initial proposed model very well could be the best model.
+    -   **Validation Set RMSE**
+        -   Level 2: The RMSE is calculated on the validation set, with some modifications to the model attempted.
+        -   Level 4: The RMSE is calculated on the validation set, with well-justified modifications to the model attempted.
+    -   **Results**
+        -   Level 2: Conclusions are made based on the features in the model.
+        -   Level 4: Conclusions relate to a potential final model.
+-   **Exploratory Linear Model 2**: See Exploratory Linear Model 1
+-   **Final Linear Models**
+    -   **Test Set RMSE**
+        -   Level 2: The exploratory models (fit to just the training data) are used to predict the test set.
+        -   Level 4: The models are trained on the training + validation sets and used to make predictions on the test set.
+    -   **Results**
+        -   Level 2: Conclusions are made about the best of the candidate models.
+        -   Level 4: Conclusions are based on the RMSE as well as the complexity/intuition behind the model.
+-   **Advanced Model** (Option 2 of 2)
+    -   **Relevance**
+        -   Level 2: The results of the advanced modelling are compared to the best linear model.
+        -   Level 4: The results of the advanced modelling are compared to the best linear model, while retaining the train-validation-test split.
+    -   **Advanced-ness**
+        -   Level 2: The modelling is above what is in the course.
+        -   Level 4: The modelling uses models beyond what we've done in class, or takes the particular features of the data into account in a novel way.
+-   **Conclusions**
+    -   Level 2: Conclusions follow from the exploration and modelling
+    -   Level 4: Conclusions
+-   **Limitations**
+    -   **Data**
+        -   Level 2: Limitations of the data are discussed, especially potential issues with the data collection or limitations on the amount of information that can be found in the data.
+        -   Level 4: From the discussions of the limitations, it is clear what the limits of *any* analysis are.
+    -   **Modelling**
+        -   Level 2: Limitations of the modelling approach are discussed.
+        -   Level 4: Limitations of the modelling approach are discussed, especially how much information the model could potentially gain from the data. All models are simplifications, so what are you losing with your simplification?
+-   **References**: Formatted however you like, but should be easy for me to see the title, author, date, and where I can find the reference (e.g., journal or URL). References can be blog posts/news articles, but must be relevant to the context of your study (this does **not** include references to help files for code you used).
+    -   **Existence**
+        -   Level 2: Any claims beyond what's in the report are backed up. Relevant articles about the data context are provided.
+        -   Level 4: In addition to level 2, articles that make similar claims to yours are found.
+    -   **Number**
+        -   Level 2: 4 relevant references are used.
+        -   Level 4: 8 relevant references are used.
+
+## Checklist 1 (Data Cleaning)
+
+-   [x] `mutate()`
+-   [ ] `group_by()` and `summarise()`
+-   [x] `pivot_wider()` and/or `pivot_longer()`
+-   [ ] A custom function and/or a `for`/`while` loop
+-   [ ] Some sort of regular expression in the data cleaning.
+-   [ ] Convert strings to factors, as necessary
+-   [ ] Relevel factors, such as grouping some to an "other" category or using a more reasonable reference category
+-   [ ] Convert something to date, time, or date-time (note that we are *not* fitting time-series models, so don't use this in the model; only use it in the exploration, and only include it if it's relevant).
+
+## Checklist 2 (Plotting)
+
+-   [ ] `geom_point()`
+-   [ ] `geom_histogram()` and/or `geom_density()` and/or `geom_boxplot()`,
+-   [ ] `geom_violin`, and/or `geom_density_ridges`
+-   [ ] `geom_bar()` and/or `geom_col()`
+-   [ ] `geom_label()` or `geom_label_repel()`
+-   [ ] `aes(colour = column_name)`
+-   [ ] `aes(fill = column_name)`
+-   [ ] `facet_wrap()` and/or `facet_grid()`
+-   [ ] Meaningful subtitle
+-   [ ] Figure captions (either using Rmd or in the "caption" argument to `labs()` in `ggplot2`)
+
+## Checklist 3 (Modelling)
+
+-   [ ] One continuous feature
+-   [ ] One categorical (factor) feature
+-   [ ] An interaction term between a continuous and categorical feature
+-   [ ] Comparing RMSE based on removing one feature
+-   [ ] Comparing RMSE based on removing an interaction term
