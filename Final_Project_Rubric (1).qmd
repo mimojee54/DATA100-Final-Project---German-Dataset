@@ -167,9 +167,9 @@ You must complete **either** Option 1 (Advanced Data Cleaning) or Option 2 (Adva
 -   [x] `mutate()`
 -   [ ] `group_by()` and `summarise()`
 -   [x] `pivot_wider()` and/or `pivot_longer()`
--   [ ] A custom function and/or a `for`/`while` loop
+-   [x] A custom function and/or a `for`/`while` loop
 -   [ ] Some sort of regular expression in the data cleaning.
--   [ ] Convert strings to factors, as necessary
+-   [x] Convert strings to factors, as necessary
 -   [ ] Relevel factors, such as grouping some to an "other" category or using a more reasonable reference category
 -   [ ] Convert something to date, time, or date-time (note that we are *not* fitting time-series models, so don't use this in the model; only use it in the exploration, and only include it if it's relevant).
 
