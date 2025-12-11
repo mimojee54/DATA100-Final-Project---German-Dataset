@@ -8,7 +8,8 @@ bibliography: references.bib
 ---
 
 ```{r,message=FALSE, warning=FALSE, results='hide'}
-library(tidyverse); library(patchwork); library(tidymodels); library(rsample); library(dplyr); library(ggrepel)
+library(tidyverse); library(patchwork); library(tidymodels); 
+library(rsample); library(dplyr); library(ggrepel)
 ```
 
 # Introduction To The German Credit Dataset
@@ -39,7 +40,14 @@ First, we will rename the columns to help with understanding the data and we wil
 
 ```{r}
 credit <- credit %>% 
-  rename("account_status" = V1, "credit_duration" = V2, "credit_history" = V3, "credit_purpose" = V4, "credit_amount" = V5, "savings_category" = V6, "employment_length" = V7, "credit_rate" = V8, "mariage_sex_status" = V9, "external_creditors" = V10, "residence_years" = V11, "valuable_property" = V12,  "years_old" = V13, "other_credit_plans" = V14, "housing_type" = V15, "credit_lines" = V16, "job_type" = V17, "dependants" = V18,"landline" = V19, "foreign_worker" = V20, "credit_risk" = V21)
+  rename("account_status" = V1, "credit_duration" = V2, "credit_history" = V3, 
+         "credit_purpose" = V4, "credit_amount" = V5, "savings_category" = V6, 
+         "employment_length" = V7, "credit_rate" = V8, 
+         "mariage_sex_status" = V9, "external_creditors" = V10, 
+         "residence_years" = V11, "valuable_property" = V12,  
+         "years_old" = V13, "other_credit_plans" = V14, "housing_type" = V15, 
+         "credit_lines" = V16, "job_type" = V17, "dependants" = V18, 
+         "landline" = V19, "foreign_worker" = V20, "credit_risk" = V21)
 credit_reduced_variables <- credit
 ```
 
@@ -86,7 +94,6 @@ Exploratory Plot 1 uses the **training set** to examine how credit duration rela
 
 ```{r}
 credit_train <- credit_clean
-#Use ifelse() to check dummy variable (savings_category_A61) and make new columns that can be plotted and easier to label on graph so Proffesor Sunny Wang can easily read our plot!
 credit_train$savings_label <- ifelse(
   credit_train$savings_category_A61 == 1,
   "Low Savings (<100 DM)",
@@ -120,7 +127,7 @@ ggplot(credit_train, aes(x = employment_length_A73, y = years_old)) +
   geom_boxplot(width = 0.2, alpha = 0.8, outlier.shape = NA) +
   labs(
     title = "Age Distribution by Employment Category",
-    subtitle = "Comparing applicants employed 1–4 years vs others using the training data only",
+    subtitle = "Comparing applicants employed 1–4 years vs others using the training data",
     x = "Employment Duration (1 = Employed 1–4 Years)",
     y = "Age (years)",
     fill = "1–4 Years Employed",
@@ -195,7 +202,8 @@ credit_reduced_variables <- credit_reduced_variables %>%
 Intuitively, we know that good credit in the past may be a good predictor for your credit in the future. Other intuitive credit predictors may also be, job type where higher paying and more reputation may lead a lender to lend more, credit rate where cheaper credit may encourage more borrowing, and credit type because you may need to borrow more for a house instead of a car.
 
 ```{r}
-credit_reduced_variables %>% ggplot(aes(x = job_type, y = credit_amount, color = credit_rate)) +   
+credit_reduced_variables %>% ggplot(aes(x = job_type, y = credit_amount, 
+                                        color = credit_rate)) +   
   geom_point() +   
   labs(title = "Credit Amount by Job Type",
        subtitle = "Differing job types lead to differing credit amounts",
@@ -206,6 +214,7 @@ credit_reduced_variables %>% ggplot(aes(x = job_type, y = credit_amount, color =
 ```
 
 ```{r}
-model_reduced_variables <- lm(credit_amount ~ job_type + credit_duration + credit_rate + credit_purpose, credit_reduced_variables)  
+model_reduced_variables <- lm(credit_amount ~ job_type + credit_duration 
+                              + credit_rate + credit_purpose, credit_reduced_variables)  
 summary(model_reduced_variables)
 ```
