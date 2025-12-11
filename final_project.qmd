@@ -8,12 +8,7 @@ bibliography: references.bib
 ---
 
 ```{r,message=FALSE, warning=FALSE, results='hide'}
-library(tidyverse)
-library(patchwork)
-library(tidymodels)
-library(rsample)
-library(dplyr)
-library(ggrepel)
+library(tidyverse); library(patchwork); library(tidymodels); library(rsample); library(dplyr); library(ggrepel)
 ```
 
 # Introduction To The German Credit Dataset
@@ -35,8 +30,7 @@ The German Credit Data contains both numerical and categorical data. The names o
 For example,
 
 ```{r}
-credit %>% select(V10) %>%
-  unique()
+credit %>% select(V10) %>% unique()
 ```
 
 Where "V10" is the variable name of the category of whether there is or is not a guarantor for the credit. "A101" translates to no guarantor, "A102" to a co-applicant, and "A103" to a guarantor.
@@ -45,27 +39,8 @@ First, we will rename the columns to help with understanding the data and we wil
 
 ```{r}
 credit <- credit %>% 
-  rename("account_status" = V1, 
-         "credit_duration" = V2,
-         "credit_history" = V3,
-         "credit_purpose" = V4,
-         "credit_amount" = V5,
-         "savings_category" = V6,
-         "employment_length" = V7, 
-         "credit_rate" = V8, 
-         "mariage_sex_status" = V9, 
-         "external_creditors" = V10, 
-         "residence_years" = V11, 
-         "valuable_property" = V12, 
-         "years_old" = V13, 
-         "other_credit_plans" = V14, 
-         "housing_type" = V15, 
-         "credit_lines" = V16, 
-         "job_type" = V17, 
-         "dependants" = V18,
-         "landline" = V19, 
-         "foreign_worker" = V20, 
-         "credit_risk" = V21)
+  rename("account_status" = V1, "credit_duration" = V2, "credit_history" = V3, "credit_purpose" = V4, "credit_amount" = V5, "savings_category" = V6, "employment_length" = V7, "credit_rate" = V8, "mariage_sex_status" = V9, "external_creditors" = V10, "residence_years" = V11, "valuable_property" = V12,  "years_old" = V13, "other_credit_plans" = V14, "housing_type" = V15, "credit_lines" = V16, "job_type" = V17, "dependants" = V18,"landline" = V19, "foreign_worker" = V20, "credit_risk" = V21)
+credit_reduced_variables <- credit
 ```
 
 Following the tidy data principles, we want each column to be a variable, each row to be an observation, and each entry to be a single value. For the guarantor example, we will create three variables, called none, co-applicant, and guarantor where the value is 1 if there is a none, co-applicant, or guarantor respectively. And are a 0 if there is no none, co-applicant, or guarantor for each observation. Then we will proceed similarity for each variable.
@@ -81,37 +56,26 @@ pivot_wider_helper <- function(data, column) {
       names_prefix = str_c(column, "_")
     )
 }
-
 non_numeric_columns <- names(
   credit %>% 
     select(!where(is.numeric))
 )
-
 for (column in non_numeric_columns) {
   credit <- pivot_wider_helper(credit, column)
 }
-
 credit <- credit %>% 
   mutate(across(where(is.double), as.factor))
-
 credit_clean <- credit
 credit <- credit <- tibble(read.table("german.data"))
 ```
 
 ```{r}
-#Split the data into Training Set, Validation Set, and Test Set ( ONLY TO BE USED AT THE END ) as per Rubric Mentions Training-Validation-Test Sets in Plotting
-
 set.seed(123)  # ensures reproducible splits
-
 split1 <- initial_split(credit_clean, prop = 0.85)
-
 credit_train_valid <- training(split1)
 credit_test <- testing(split1)
-
 set.seed(123)
-
 split2 <- initial_split(credit_train_valid, prop = 0.80)
-
 credit_train <- training(split2)
 credit_valid <- testing(split2)
 ```
@@ -128,7 +92,6 @@ credit_train$savings_label <- ifelse(
   "Low Savings (<100 DM)",
   "Savings ≥ 100 DM"
 )
-
 ggplot(credit_train, aes(x = credit_duration, y = credit_amount)) +
   geom_smooth(aes(colour = savings_category_A61), method = "loess", se = FALSE) +
   geom_point(aes(colour = savings_category_A61), alpha = 0.5) +
@@ -153,9 +116,7 @@ Exploratory Plot 2 compares applicant age across employment categories using **o
 
 ```{r}
 ggplot(credit_train, aes(x = employment_length_A73, y = years_old)) +
-  # Violin plot to show distribution
   geom_violin(aes(fill = employment_length_A73), alpha = 0.5) +
-  # Boxplot layered on top to summarize age distribution
   geom_boxplot(width = 0.2, alpha = 0.8, outlier.shape = NA) +
   labs(
     title = "Age Distribution by Employment Category",
@@ -176,14 +137,12 @@ The full model includes credit duration, the low-savings indicator, and their in
 model_full <- lm(credit_amount ~ credit_duration * savings_category_A61,
                  data = credit_train)
 summary(model_full)
-#Note: Plot 1 already hinted at the relationship between duration and amount change depending on savings level!
 ```
 
 The model is used to generate predicted credit amounts for the **validation set**, and the RMSE is calculated by comparing these predictions to the actual values. This RMSE score measures how well the full model predicts unseen data, providing an objective way to assess its performance.
 
 ```{r}
 predict_full <- predict(model_full, newdata = credit_valid)
-
 rmse_full <- sqrt(mean((credit_valid$credit_amount - predict_full)^2))
 rmse_full
 ```
@@ -193,7 +152,6 @@ This model removes the **categorical savings variable** and uses only credit dur
 ```{r}
 model_no_cat <- lm(credit_amount ~ credit_duration,
                    data = credit_train)
-
 predict_no_cat <- predict(model_no_cat, newdata = credit_valid)
 rmse_no_cat <- sqrt(mean((credit_valid$credit_amount - predict_no_cat)^2))
 rmse_no_cat
@@ -204,7 +162,6 @@ This version removes the interaction term but keeps both predictors. By calculat
 ```{r}
 model_no_interaction <- lm(credit_amount ~ credit_duration + savings_category_A61,
                            data = credit_train)
-
 predict_no_inter <- predict(model_no_interaction, newdata = credit_valid)
 rmse_no_inter <- sqrt(mean((credit_valid$credit_amount - predict_no_inter)^2))
 rmse_no_inter
@@ -230,29 +187,6 @@ credit %>%
 This gives us much more insight about the data compared to just 1s and 0s. We can see that for credit purpose A44 (Domestic Appliances) tends to correspond to lower credit amount vs A49 (Business).
 
 ```{r}
-credit_reduced_variables <- credit %>% 
-  rename("account_status" = V1, 
-         "credit_duration" = V2,
-         "credit_history" = V3, 
-         "credit_purpose" = V4,
-         "credit_amount" = V5,         
-         "savings_category" = V6,     
-         "employment_length" = V7,    
-         "credit_rate" = V8,        
-         "mariage_sex_status" = V9,     
-         "external_creditors" = V10,   
-         "residence_years" = V11,      
-         "valuable_property" = V12,   
-         "years_old" = V13,       
-         "other_credit_plans" = V14,   
-         "housing_type" = V15,        
-         "credit_lines" = V16,        
-         "job_type" = V17,         
-         "dependants" = V18,       
-         "landline" = V19,       
-         "foreign_worker" = V20,    
-         "credit_risk" = V21)  
-
 credit_reduced_variables <- credit_reduced_variables %>%   
   mutate(across(all_of(non_numeric_columns),           
                 ~ave(credit_amount, ., FUN = mean)))
@@ -272,7 +206,6 @@ credit_reduced_variables %>% ggplot(aes(x = job_type, y = credit_amount, color =
 ```
 
 ```{r}
-model_reduced_variables <- lm(credit_amount ~ job_type + credit_duration + credit_rate + credit_purpose,                                credit_reduced_variables)  
-
+model_reduced_variables <- lm(credit_amount ~ job_type + credit_duration + credit_rate + credit_purpose, credit_reduced_variables)  
 summary(model_reduced_variables)
 ```
